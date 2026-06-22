@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Saad Dogar — Portfolio</title>
+    <meta
+      name="description"
+      content="Saad Dogar — CS student at FAST-NUCES. Four projects, four layers of the stack: hardware, operating system, application, web."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <div class="boot-screen" id="bootScreen" aria-hidden="true">
+      <pre class="boot-log" id="bootLog"></pre>
+    </div>
+
+    <div class="site" id="site">
+      <nav class="topbar">
+        <span class="logo">SD<span class="logo-slash">//</span></span>
+        <div class="nav-links">
+          <a href="#stack">stack</a>
+          <a href="#projects">projects</a>
+          <a href="#contact">contact</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <p class="eyebrow">// PORTFOLIO.SYS — READY</p>
+        <h1>From silicon<br />to the browser.</h1>
+        <p class="hero-sub">
+          I'm Saad — a CS student at FAST-NUCES, class of 2029. I build things
+          from the bottom up: a 16-bit computer from scratch, a text editor that
+          talks straight to the OS, a game on a graphics library, and a live web
+          app. Four projects, four layers of the same stack.
+        </p>
+        <a class="scroll-cue" href="#stack"
+          >scroll<span class="arrow">↓</span></a
+        >
+      </section>
+
+      <section class="stack-section" id="stack">
+        <p class="section-label">the stack</p>
+        <div class="ladder">
+          <a href="#onyx" class="rung">
+            <span class="rung-num">00</span>
+            <span class="rung-name">HARDWARE</span>
+            <span class="rung-proj">ONYX-16</span>
+          </a>
+
+          <a href="#editor" class="rung">
+            <span class="rung-num">01</span>
+            <span class="rung-name">OPERATING SYSTEM</span>
+            <span class="rung-proj">The Aracanum Editor</span>
+          </a>
+
+          <a href="#tumblepop" class="rung">
+            <span class="rung-num">02</span>
+            <span class="rung-name">APPLICATION</span>
+            <span class="rung-proj">Tumble-Pop Replica</span>
+          </a>
+
+          <a href="#weather" class="rung">
+            <span class="rung-num">03</span>
+            <span class="rung-name">WEB</span>
+            <span class="rung-proj">Weather Tracker</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="projects" id="projects">
+        <article class="project" id="onyx">
+          <div class="project-head">
+            <p class="layer-tag">LAYER 00 · HARDWARE</p>
+            <h2>ONYX-16</h2>
+            <p class="tagline">
+              A fully emulated 16-bit computer, built from scratch in C++.
+            </p>
+          </div>
+          <div class="project-body">
+            <ul class="features">
+              <li>
+                Full fetch → decode → execute → writeback CPU pipeline with 8
+                general-purpose registers, an ALU, and a 16-byte direct-mapped
+                cache
+              </li>
+              <li>
+                Custom two-pass assembler compiles ONYX assembly — written in
+                English or Roman Urdu — straight to machine words
+              </li>
+              <li>
+                Simulated power supply enforces a real 20W budget; the CPU
+                thermal-halts at 90°C
+              </li>
+              <li>
+                Boots into an OS menu, flashes compiled binaries into virtual
+                RAM, and runs them cycle-by-cycle on a 32×16 phosphor display
+              </li>
+            </ul>
+            <div class="inset">
+              <p class="inset-label">onyx asm — bilingual</p>
+              <pre>
+BHARO R0, myVar      ; load address
+PARHO R1, R0         ; read value
+JAMA  R1, R1         ; R1 = R1 + R1
+AARAM                ; halt</pre
+              >
+            </div>
+          </div>
+          <div class="project-foot">
+            <div class="tags">
+              <span>C++17</span><span>OOP</span><span>No dependencies</span>
+            </div>
+            <a
+              class="link"
+              href="https://github.com/Saad-Dogar/ONYX-16"
+              target="_blank"
+              rel="noopener"
+              >view source <span class="arrow">↗</span></a
+            >
+          </div>
+        </article>
+
+        <article class="project" id="editor">
+          <div class="project-head">
+            <p class="layer-tag">LAYER 01 · OPERATING SYSTEM</p>
+            <h2>The Aracanum Editor</h2>
+            <p class="tagline">
+              A multi-tab text editor built directly on raw Win32 — no rich-edit
+              control.
+            </p>
+          </div>
+          <div class="project-body">
+            <ul class="features">
+              <li>
+                Up to 10 simultaneous tabs, each with its own buffer, cursor,
+                alignment, and page state
+              </li>
+              <li>
+                Custom Wrapper/Layout engine reflows the raw character buffer
+                into lines, columns, and paginated pages on every render
+              </li>
+              <li>
+                Incremental find with live cursor-jump, full clipboard
+                integration, and four text alignment modes
+              </li>
+              <li>
+                Every line, cursor, and selection is drawn manually with GDI —
+                no third-party UI library
+              </li>
+            </ul>
+            <div class="inset">
+              <p class="inset-label">core shortcuts</p>
+              <div class="kv"><span>Ctrl+N</span><span>new tab</span></div>
+              <div class="kv"><span>Ctrl+F</span><span>find</span></div>
+              <div class="kv"><span>Ctrl+L/R/E/J</span><span>align</span></div>
+              <div class="kv"><span>Ctrl+P</span><span>toggle panel</span></div>
+            </div>
+          </div>
+          <div class="project-foot">
+            <div class="tags">
+              <span>C++</span><span>Win32 API</span><span>Raw GDI</span>
+            </div>
+            <a
+              class="link"
+              href="https://github.com/Saad-Dogar/text-editor"
+              target="_blank"
+              rel="noopener"
+              >view source <span class="arrow">↗</span></a
+            >
+          </div>
+        </article>
+
+        <article class="project" id="tumblepop">
+          <div class="project-head">
+            <p class="layer-tag">LAYER 02 · APPLICATION</p>
+            <h2>Tumble-Pop Replica</h2>
+            <p class="tagline">
+              A faithful recreation of the arcade classic, built in C++ with
+              SFML.
+            </p>
+          </div>
+          <div class="project-body">
+            <ul class="features">
+              <li>
+                Vacuum up ghosts and skeletons, then fire them back as rolling
+                projectiles that chain into other enemies
+              </li>
+              <li>
+                Two playable characters, four powerups, and two structurally
+                distinct levels — one with randomized layouts
+              </li>
+              <li>
+                Independent movement, gravity, and animation state machines for
+                each enemy type
+              </li>
+              <li>
+                Sprites, audio, and input all handled through SFML — zero
+                external game-engine dependencies
+              </li>
+            </ul>
+            <div class="inset">
+              <p class="inset-label">powerups</p>
+              <div class="kv"><span>Speed</span><span>×2 movement</span></div>
+              <div class="kv">
+                <span>Range</span><span>+vacuum tolerance</span>
+              </div>
+              <div class="kv"><span>Power</span><span>+vacuum range</span></div>
+              <div class="kv"><span>Extra Life</span><span>+1 life</span></div>
+            </div>
+          </div>
+          <div class="project-foot">
+            <div class="tags"><span>C++</span><span>SFML 2.x</span></div>
+            <a
+              class="link"
+              href="https://github.com/Saad-Dogar/TumblePop-Game"
+              target="_blank"
+              rel="noopener"
+              >view source <span class="arrow">↗</span></a
+            >
+          </div>
+        </article>
+
+        <article class="project" id="weather">
+          <div class="project-head">
+            <p class="layer-tag">LAYER 03 · WEB</p>
+            <h2>Weather Tracker <span class="live-dot" title="Live"></span></h2>
+            <p class="tagline">
+              A live weather dashboard — vanilla HTML, CSS, and JavaScript, no
+              frameworks.
+            </p>
+          </div>
+          <div class="project-body">
+            <ul class="features">
+              <li>
+                Live conditions plus a 5-day forecast, pulled from the
+                OpenWeatherMap API
+              </li>
+              <li>
+                Automatic city detection via IP geolocation on load, with manual
+                city search
+              </li>
+              <li>
+                °C/°F toggle and an animated light/dark theme switch, themed
+                across the entire UI
+              </li>
+              <li>
+                Custom interface built from scratch — first JavaScript project
+                after two semesters of pure C++
+              </li>
+            </ul>
+            <div class="inset">
+              <p class="inset-label">dashboard</p>
+              <div class="kv"><span>Forecast</span><span>5-day</span></div>
+              <div class="kv"><span>Geo</span><span>auto via IP</span></div>
+              <div class="kv"><span>Units</span><span>°C / °F</span></div>
+            </div>
+          </div>
+          <div class="project-foot">
+            <div class="tags">
+              <span>HTML</span><span>CSS</span><span>JavaScript</span>
+            </div>
+            <div class="link-group">
+              <a
+                class="link live"
+                href="https://saad-dogar.github.io/weather-tracker/"
+                target="_blank"
+                rel="noopener"
+                >live demo <span class="arrow">↗</span></a
+              >
+              <a
+                class="link"
+                href="https://github.com/Saad-Dogar/weather-tracker"
+                target="_blank"
+                rel="noopener"
+                >view source <span class="arrow">↗</span></a
+              >
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <footer id="contact">
+        <p class="section-label">get in touch</p>
+        <h2 class="footer-name">SAAD DOGAR</h2>
+
+        <div class="contact-grid">
+          <a
+            class="contact-card"
+            href="https://github.com/Saad-Dogar"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg
+              class="contact-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              aria-hidden="true"
+            >
+              <path
+                d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.7 2.8 5.6 3.1 5.6 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.2 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"
+              />
+            </svg>
+            <span class="contact-label">GitHub</span>
+            <span class="contact-value">github.com/Saad-Dogar</span>
+          </a>
+
+          <a
+            class="contact-card"
+            href="https://linkedin.com/in/muhammad-saad-saleem-274323322"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg
+              class="contact-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="1.5" />
+              <line x1="7.5" y1="10" x2="7.5" y2="17" />
+              <line x1="7.5" y1="6.7" x2="7.5" y2="6.8" />
+              <path
+                d="M12 17v-4.2c0-1.6 1-2.6 2.4-2.6 1.3 0 2.1 1 2.1 2.6V17"
+              />
+              <line x1="12" y1="10" x2="12" y2="17" />
+            </svg>
+            <span class="contact-label">LinkedIn</span>
+            <span class="contact-value">linkedin.com/in/Muhammad-Saad-Saleem-274323322</span>
+          </a>
+
+          <a class="contact-card" href="mailto:msaaddogar0@gmail.com">
+            <svg
+              class="contact-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="1.5" />
+              <path d="M3.5 6.5 12 13l8.5-6.5" />
+            </svg>
+            <span class="contact-label">Email</span>
+            <span class="contact-value">msaaddogar0@gmail.com</span>
+          </a>
+        </div>
+
+        <p class="footer-note">FAST-NUCES · Islamabad</p>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
