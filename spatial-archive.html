@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spatial Archive — Technical Log / PreserveMy.World</title>
+<meta name="description" content="A technical log documenting AI-based 3D scene reconstruction — photogrammetry, NeRF, and 3D Gaussian Splatting — for cultural heritage preservation.">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600&display=swap" rel="stylesheet">
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bone:  '#EDEAE2',
+          paper: '#F6F4EF',
+          stone: '#C7C0AE',
+          ink:   '#20241E',
+          slate: '#4F564B',
+          moss:  '#5C6E4A',
+          rust:  '#8C5435',
+        },
+        fontFamily: {
+          serif: ['"Playfair Display"', 'serif'],
+          mono:  ['"JetBrains Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  :root{
+    --line: #20241E;
+    --line-soft: rgba(32,36,30,0.16);
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    background-color: #EDEAE2;
+    background-image:
+      linear-gradient(rgba(32,36,30,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(32,36,30,0.045) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* focus visibility (kept, never removed) */
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
+    outline: 2px solid #5C6E4A;
+    outline-offset: 3px;
+  }
+
+  /* tracked label utility */
+  .label{
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* hairline rule */
+  .hr-line{ border-top: 1px solid var(--line-soft); }
+
+  /* ===== Specimen frame (signature element) ===== */
+  .spec-frame{
+    position: relative;
+    background: #F6F4EF;
+    border: 1px solid var(--line);
+  }
+  .spec-frame .corner{
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+  }
+  .corner-tl{ top: -1px; left: -1px;  border-top: 2px solid #20241E; border-left: 2px solid #20241E; }
+  .corner-tr{ top: -1px; right: -1px; border-top: 2px solid #20241E; border-right: 2px solid #20241E; }
+  .corner-bl{ bottom: -1px; left: -1px;  border-bottom: 2px solid #20241E; border-left: 2px solid #20241E; }
+  .corner-br{ bottom: -1px; right: -1px; border-bottom: 2px solid #20241E; border-right: 2px solid #20241E; }
+
+  .frame-media{
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #0F120E;
+    border-bottom: 1px solid var(--line);
+  }
+  .frame-media img{
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(0.96) contrast(1.02);
+  }
+  .frame-media.is-wide{ aspect-ratio: 16/10; }
+
+  /* status dot */
+  .dot{ width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .dot-live{ background:#5C6E4A; animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:0.35;} }
+
+  /* coordinate readout */
+  #coord-readout{
+    position: fixed;
+    right: 14px;
+    bottom: 14px;
+    z-index: 40;
+    font-size: 11px;
+    padding: 6px 10px;
+    background: #F6F4EF;
+    border: 1px solid var(--line);
+    color: #20241E;
+    pointer-events: none;
+  }
+
+  /* scroll reveal */
+  .reveal{ opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.is-visible{ opacity: 1; transform: translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1; transform:none; transition:none; }
+    .dot-live{ animation:none; }
+  }
+
+  /* nav link underline */
+  .nav-link{ position:relative; }
+  .nav-link::after{
+    content:""; position:absolute; left:0; right:0; bottom:-6px; height:1px;
+    background:#20241E; transform: scaleX(0); transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+  .nav-link:hover::after{ transform: scaleX(1); }
+
+  /* table */
+  .meta-table td, .meta-table th{ border:1px solid var(--line-soft); padding:8px 12px; }
+  .meta-table th{ text-align:left; background:#EDEAE2; }
+
+  ::selection{ background:#5C6E4A; color:#F6F4EF; }
+</style>
+</head>
+
+<body class="font-mono text-ink text-[13.5px] leading-relaxed antialiased">
+
+  <!-- coordinate readout -->
+  <div id="coord-readout" class="hidden md:block">X·0000&nbsp;&nbsp;Y·0000</div>
+
+  <!-- ============ NAV ============ -->
+  <header class="sticky top-0 z-30 bg-bone/95 border-b border-ink">
+    <div class="max-w-[1280px] mx-auto px-5 md:px-10 h-14 flex items-center justify-between">
+      <a href="#top" class="font-semibold tracking-tight">
+        <span class="border border-ink px-1.5 py-0.5 mr-1">SA</span>
+        <span class="label hidden sm:inline">Spatial Archive</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-8 label text-[11.5px]">
+        <a href="#pipeline" class="nav-link">Pipeline</a>
+        <a href="#ingestion" class="nav-link">Ingestion</a>
+        <a href="#about" class="nav-link">About</a>
+      </nav>
+
+      <div class="flex items-center gap-2 label text-[11px] text-slate">
+        <span class="dot dot-live"></span>
+        <span class="hidden sm:inline">Log:</span>
+        <span class="text-ink">Active</span>
+        <span class="hidden lg:inline pl-3 border-l border-ink/30" id="uptime">T+00:00:00</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section id="top" class="max-w-[1280px] mx-auto px-5 md:px-10 pt-14 pb-16 border-b border-ink">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+      <div class="lg:col-span-7">
+        <p class="label text-[11.5px] text-rust mb-4">Field Log — PreserveMy.World / Non-Profit Initiative</p>
+
+        <h1 class="font-serif font-800 text-[58px] sm:text-[76px] leading-[0.95] mb-5" style="font-weight:800;">
+          Spatial<br>Archive
+        </h1>
+
+        <p class="label text-[12px] text-slate mb-6 max-w-md">
+          Documenting heritage through AI &amp; 3D scene reconstruction.
+        </p>
+
+        <p class="text-[14px] text-slate max-w-lg leading-[1.8] mb-8">
+          A technical log exploring the pipeline from 2D pixel data to 3D realities —
+          tracing the path through <span class="text-ink">photogrammetry</span>,
+          <span class="text-ink">Neural Radiance Fields (NeRF)</span>, and
+          <span class="text-ink">3D Gaussian Splatting (3DGS)</span>. Each entry records
+          how a physical structure is recovered, frame by frame, into a navigable
+          spatial record.
+        </p>
+
+        <div class="grid grid-cols-3 max-w-md border border-ink">
+          <div class="px-4 py-3 border-r border-ink">
+            <p class="text-[10.5px] label text-slate mb-1">Captures</p>
+            <p class="font-serif text-2xl font-700">014</p>
+          </div>
+          <div class="px-4 py-3 border-r border-ink">
+            <p class="text-[10.5px] label text-slate mb-1">Models</p>
+            <p class="font-serif text-2xl font-700">003</p>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-[10.5px] label text-slate mb-1">Status</p>
+            <p class="font-serif text-2xl font-700 text-moss">Open</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5">
+        <figure class="spec-frame">
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+          <div class="frame-media">
+            <img src="./tractor.png" alt="Rendered 3D Gaussian Splatting reconstruction of an excavator unit, used as the reference capture for the training log.">
+          </div>
+          <figcaption class="px-4 py-3 flex items-center justify-between border-t border-ink">
+            <span class="label text-[11px]">Ref_Capture — 3DGS Output</span>
+            <span class="text-[11px] text-slate">96×96px</span>
+          </figcaption>
+        </figure>
+        <p class="text-[11px] text-slate mt-2 pl-1">
+          fig.00 — converged target. subsequent renders trace the optimization toward this reference.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SECTION 01 — NeRF PIPELINE ============ -->
+  <section id="pipeline" class="max-w-[1280px] mx-auto px-5 md:px-10 py-16 border-b border-ink">
+
+    <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+      <div class="lg:col-span-4">
+        <p class="label text-[11.5px] text-rust mb-3">Process Log / 01</p>
+        <h2 class="font-serif text-[34px] leading-[1.05] font-700">The NeRF<br>Training Pipeline</h2>
+      </div>
+      <div class="lg:col-span-8 lg:pt-2">
+        <p class="text-slate text-[14px] leading-[1.8] max-w-2xl">
+          The network is given a sparse set of 2D captures and learns a continuous,
+          coordinate-based radiance function — for any 3D point and viewing direction,
+          it predicts a colour and density. Geometry is not stored explicitly; it is
+          resolved through repeated optimisation against the input images. <span class="text-ink">PSNR
+          (peak signal-to-noise ratio)</span> is logged at each interval as a proxy for
+          reconstruction fidelity — it rises as the field localises coarse structure, then
+          fluctuates while high-frequency detail (edges, occlusion boundaries, specular
+          surfaces) is resolved against noise in the sample set.
+        </p>
+      </div>
+    </div>
+
+    <div class="reveal grid grid-cols-1 sm:grid-cols-3 gap-px bg-ink border border-ink">
+
+      <figure class="spec-frame !border-0">
+        <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        <div class="frame-media is-wide">
+          <img src="./iteration_300.png" alt="NeRF training visualization at iteration 300, showing a noisy partial reconstruction with PSNR plot.">
+        </div>
+        <figcaption class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="label text-[11px]">[Iteration_300]</span>
+            <span class="dot" style="background:#8C5435"></span>
+          </div>
+          <p class="text-[11px] text-slate">PSNR ≈ 10.1&nbsp;dB — coarse density only, surfaces unresolved.</p>
+        </figcaption>
+      </figure>
+
+      <figure class="spec-frame !border-0">
+        <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        <div class="frame-media is-wide">
+          <img src="./iteration_600.png" alt="NeRF training visualization at iteration 600, showing intermediate structure with PSNR plot.">
+        </div>
+        <figcaption class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="label text-[11px]">[Iteration_600]</span>
+            <span class="dot" style="background:#8C5435"></span>
+          </div>
+          <p class="text-[11px] text-slate">PSNR ≈ 10.0&nbsp;dB — bucket geometry forming, colour bleeding at edges.</p>
+        </figcaption>
+      </figure>
+
+      <figure class="spec-frame !border-0">
+        <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        <div class="frame-media is-wide">
+          <img src="./iteration_900.png" alt="NeRF training visualization at iteration 900, showing improved structure and color separation with PSNR plot.">
+        </div>
+        <figcaption class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="label text-[11px]">[Iteration_900]</span>
+            <span class="dot" style="background:#5C6E4A"></span>
+          </div>
+          <p class="text-[11px] text-slate">PSNR ≈ 11.7&nbsp;dB — chassis/bucket separation legible against ground plane.</p>
+        </figcaption>
+      </figure>
+
+    </div>
+
+    <p class="reveal text-[11px] text-slate mt-3 pl-1 max-w-2xl">
+      note — PSNR is non-monotonic by design at this training scale: short-horizon spikes (≈ iter 100)
+      reflect early overfitting to a single dominant viewpoint before the field redistributes
+      density across the full camera set.
+    </p>
+
+  </section>
+
+  <!-- ============ SECTION 02 — INGESTION ============ -->
+  <section id="ingestion" class="max-w-[1280px] mx-auto px-5 md:px-10 py-16 border-b border-ink">
+
+    <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+      <div class="lg:col-span-4">
+        <p class="label text-[11.5px] text-rust mb-3">Process Log / 02</p>
+        <h2 class="font-serif text-[34px] leading-[1.05] font-700">Spatial Ingestion<br>3DGS Baseline</h2>
+      </div>
+      <div class="lg:col-span-8 lg:pt-2">
+        <p class="text-slate text-[14px] leading-[1.8] max-w-2xl">
+          Subject: Western Pacific No.713 locomotive, on-site capture. Overlapping
+          frames are taken around the structure so that shared features can be
+          matched across views. From these correspondences, structure-from-motion
+          recovers each camera's <span class="text-ink">extrinsic matrix</span> (position +
+          orientation) and <span class="text-ink">intrinsic matrix</span> (focal length, sensor
+          offset), and triangulates a sparse point cloud — <code class="text-ink">point_cloud.ply</code> —
+          used to seed the initial Gaussian primitives.
+        </p>
+      </div>
+    </div>
+
+    <div class="reveal grid grid-cols-1 sm:grid-cols-3 gap-px bg-ink border border-ink mb-10">
+
+      <figure class="spec-frame !border-0">
+        <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        <div class="frame-media">
+          <img src="./train_front.png" alt="Front three-quarter capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
+        </div>
+        <figcaption class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="label text-[11px]">Frame_A</span>
+            <span class="text-[10.5px] text-slate">~0°</span>
+          </div>
+          <p class="text-[11px] text-slate">Front elevation — primary nose vents and unit number visible.</p>
+        </figcaption>
+      </figure>
+
+      <figure class="spec-frame !border-0">
+        <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        <div class="frame-media">
+          <img src="./train_side.png" alt="Lateral profile capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
+        </div>
+        <figcaption class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="label text-[11px]">Frame_B</span>
+            <span class="text-[10.5px] text-slate">~90°</span>
+          </div>
+          <p class="text-[11px] text-slate">Lateral profile — full livery and panel seams for texture baking.</p>
+        </figcaption>
+      </figure>
+
+      <figure class="spec-frame !border-0">
+        <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+        <div class="frame-media">
+          <img src="./train_back.png" alt="Rear coupling-side capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
+        </div>
+        <figcaption class="px-4 py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="label text-[11px]">Frame_C</span>
+            <span class="text-[10.5px] text-slate">~180°</span>
+          </div>
+          <p class="text-[11px] text-slate">Rear / coupling side — yard context for ground-plane alignment.</p>
+        </figcaption>
+      </figure>
+
+    </div>
+
+    <!-- metadata + pipeline note -->
+    <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="lg:col-span-5">
+        <p class="label text-[11px] text-slate mb-3">Dataset_Metadata</p>
+        <table class="meta-table w-full text-[12px] border-collapse">
+          <tr><th>Subject</th><td>WP 713 — diesel locomotive</td></tr>
+          <tr><th>Frames shown</th><td>3 of N (representative subset)</td></tr>
+          <tr><th>Derived asset</th><td>point_cloud.ply</td></tr>
+          <tr><th>Method ref.</th><td>SfM / COLMAP-style matching</td></tr>
+        </table>
+      </div>
+      <div class="lg:col-span-7">
+        <p class="label text-[11px] text-slate mb-3">Pipeline_Note</p>
+        <ol class="text-[12.5px] text-slate leading-[1.9] space-y-1 list-none">
+          <li><span class="text-ink">01</span> — Capture overlapping frames around the subject, minimum ~60% overlap between neighbours.</li>
+          <li><span class="text-ink">02</span> — Detect and match features across frames to estimate relative camera pose.</li>
+          <li><span class="text-ink">03</span> — Triangulate matched features into a sparse point cloud; solve intrinsics/extrinsics jointly.</li>
+          <li><span class="text-ink">04</span> — Initialise Gaussian primitives at point-cloud positions; optimise colour, opacity, covariance.</li>
+        </ol>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ ABOUT / FOOTER ============ -->
+  <section id="about" class="max-w-[1280px] mx-auto px-5 md:px-10 py-16">
+    <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <div class="lg:col-span-4">
+        <p class="label text-[11.5px] text-rust mb-3">Operator Log</p>
+        <h2 class="font-serif text-[30px] leading-[1.1] font-700">About this archive</h2>
+      </div>
+
+      <div class="lg:col-span-5">
+        <p class="text-slate text-[14px] leading-[1.8]">
+          Maintained by Muhammad Saad Saleem, a 2nd-semester Computer Science student
+          at FAST-NUCES, Islamabad. This log sits at the intersection of raw web
+          engineering and applied AI pipeline development — built in public as part
+          of an ongoing effort to make 3D scene reconstruction legible and reusable
+          for cultural and heritage preservation work under
+          <span class="text-ink">PreserveMy.World</span>.
+        </p>
+      </div>
+
+      <div class="lg:col-span-3">
+        <p class="label text-[11px] text-slate mb-3">Reach</p>
+        <div class="flex flex-col gap-2 text-[12.5px]">
+          <a href="#" class="border border-ink px-3 py-2 flex items-center justify-between hover:bg-ink hover:text-paper transition-colors">
+            GitHub <span aria-hidden="true">↗</span>
+          </a>
+          <a href="#" class="border border-ink px-3 py-2 flex items-center justify-between hover:bg-ink hover:text-paper transition-colors">
+            LinkedIn <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="border-t border-ink">
+    <div class="max-w-[1280px] mx-auto px-5 md:px-10 h-14 flex items-center justify-between text-[11px] text-slate label">
+      <span>© 2026 Spatial Archive — PreserveMy.World</span>
+      <span class="hidden sm:inline">Index — 003 / Active</span>
+    </div>
+  </footer>
+
+<script>
+  // uptime clock
+  (function(){
+    const el = document.getElementById('uptime');
+    if(!el) return;
+    const start = Date.now();
+    function tick(){
+      const s = Math.floor((Date.now() - start) / 1000);
+      const hh = String(Math.floor(s/3600)).padStart(2,'0');
+      const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+      const ss = String(s%60).padStart(2,'0');
+      el.textContent = `T+${hh}:${mm}:${ss}`;
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+
+  // coordinate readout
+  (function(){
+    const el = document.getElementById('coord-readout');
+    if(!el) return;
+    window.addEventListener('mousemove', (e) => {
+      const x = String(e.clientX).padStart(4,'0');
+      const y = String(e.clientY).padStart(4,'0');
+      el.textContent = `X·${x}  Y·${y}`;
+    }, { passive: true });
+  })();
+
+  // scroll reveal
+  (function(){
+    const items = document.querySelectorAll('.reveal');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduced || !('IntersectionObserver' in window)){
+      items.forEach(el => el.classList.add('is-visible'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    items.forEach(el => io.observe(el));
+  })();
+</script>
+
+</body>
+</html>
