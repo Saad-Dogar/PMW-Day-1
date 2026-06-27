@@ -6,12 +6,10 @@
 <title>Spatial Archive — Technical Log / PreserveMy.World</title>
 <meta name="description" content="A technical log documenting AI-based 3D scene reconstruction — photogrammetry, NeRF, and 3D Gaussian Splatting — for cultural heritage preservation.">
 
-<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,500;1,600&display=swap" rel="stylesheet">
 
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -51,22 +49,18 @@
     background-size: 48px 48px;
   }
 
-  /* focus visibility (kept, never removed) */
   a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
     outline: 2px solid #5C6E4A;
     outline-offset: 3px;
   }
 
-  /* tracked label utility */
   .label{
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
-  /* hairline rule */
   .hr-line{ border-top: 1px solid var(--line-soft); }
 
-  /* ===== Specimen frame (signature element) ===== */
   .spec-frame{
     position: relative;
     background: #F6F4EF;
@@ -97,12 +91,10 @@
   }
   .frame-media.is-wide{ aspect-ratio: 16/10; }
 
-  /* status dot */
   .dot{ width:7px; height:7px; border-radius:50%; display:inline-block; }
   .dot-live{ background:#5C6E4A; animation: pulse 2.4s ease-in-out infinite; }
   @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:0.35;} }
 
-  /* coordinate readout */
   #coord-readout{
     position: fixed;
     right: 14px;
@@ -116,7 +108,6 @@
     pointer-events: none;
   }
 
-  /* scroll reveal */
   .reveal{ opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .reveal.is-visible{ opacity: 1; transform: translateY(0); }
 
@@ -125,7 +116,6 @@
     .dot-live{ animation:none; }
   }
 
-  /* nav link underline */
   .nav-link{ position:relative; }
   .nav-link::after{
     content:""; position:absolute; left:0; right:0; bottom:-6px; height:1px;
@@ -134,7 +124,6 @@
   }
   .nav-link:hover::after{ transform: scaleX(1); }
 
-  /* table */
   .meta-table td, .meta-table th{ border:1px solid var(--line-soft); padding:8px 12px; }
   .meta-table th{ text-align:left; background:#EDEAE2; }
 
@@ -144,10 +133,8 @@
 
 <body class="font-mono text-ink text-[13.5px] leading-relaxed antialiased">
 
-  <!-- coordinate readout -->
   <div id="coord-readout" class="hidden md:block">X·0000&nbsp;&nbsp;Y·0000</div>
 
-  <!-- ============ NAV ============ -->
   <header class="sticky top-0 z-30 bg-bone/95 border-b border-ink">
     <div class="max-w-[1280px] mx-auto px-5 md:px-10 h-14 flex items-center justify-between">
       <a href="#top" class="font-semibold tracking-tight">
@@ -170,7 +157,6 @@
     </div>
   </header>
 
-  <!-- ============ HERO ============ -->
   <section id="top" class="max-w-[1280px] mx-auto px-5 md:px-10 pt-14 pb-16 border-b border-ink">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
@@ -217,7 +203,7 @@
           <span class="corner corner-bl"></span>
           <span class="corner corner-br"></span>
           <div class="frame-media">
-            <img src="./tractor.png" alt="Rendered 3D Gaussian Splatting reconstruction of an excavator unit, used as the reference capture for the training log.">
+            <img src=".experiments/3DGS/tractor.png" alt="Rendered 3D Gaussian Splatting reconstruction of an excavator unit, used as the reference capture for the training log.">
           </div>
           <figcaption class="px-4 py-3 flex items-center justify-between border-t border-ink">
             <span class="label text-[11px]">Ref_Capture — 3DGS Output</span>
@@ -232,7 +218,6 @@
     </div>
   </section>
 
-  <!-- ============ SECTION 01 — NeRF PIPELINE ============ -->
   <section id="pipeline" class="max-w-[1280px] mx-auto px-5 md:px-10 py-16 border-b border-ink">
 
     <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
@@ -260,7 +245,7 @@
         <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
         <span class="corner corner-bl"></span><span class="corner corner-br"></span>
         <div class="frame-media is-wide">
-          <img src="./iteration_300.png" alt="NeRF training visualization at iteration 300, showing a noisy partial reconstruction with PSNR plot.">
+          <img src=".experiments/3DGS/iteration_300.png" alt="NeRF training visualization at iteration 300, showing a noisy partial reconstruction with PSNR plot.">
         </div>
         <figcaption class="px-4 py-3">
           <div class="flex items-center justify-between mb-1">
@@ -275,7 +260,7 @@
         <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
         <span class="corner corner-bl"></span><span class="corner corner-br"></span>
         <div class="frame-media is-wide">
-          <img src="./iteration_600.png" alt="NeRF training visualization at iteration 600, showing intermediate structure with PSNR plot.">
+          <img src=".experiments/3DGS/iteration_600.png" alt="NeRF training visualization at iteration 600, showing intermediate structure with PSNR plot.">
         </div>
         <figcaption class="px-4 py-3">
           <div class="flex items-center justify-between mb-1">
@@ -290,7 +275,7 @@
         <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
         <span class="corner corner-bl"></span><span class="corner corner-br"></span>
         <div class="frame-media is-wide">
-          <img src="./iteration_900.png" alt="NeRF training visualization at iteration 900, showing improved structure and color separation with PSNR plot.">
+          <img src=".experiments/3DGS/iteration_900.png" alt="NeRF training visualization at iteration 900, showing improved structure and color separation with PSNR plot.">
         </div>
         <figcaption class="px-4 py-3">
           <div class="flex items-center justify-between mb-1">
@@ -311,7 +296,6 @@
 
   </section>
 
-  <!-- ============ SECTION 02 — INGESTION ============ -->
   <section id="ingestion" class="max-w-[1280px] mx-auto px-5 md:px-10 py-16 border-b border-ink">
 
     <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
@@ -338,7 +322,7 @@
         <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
         <span class="corner corner-bl"></span><span class="corner corner-br"></span>
         <div class="frame-media">
-          <img src="./train_front.png" alt="Front three-quarter capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
+          <img src=".experiments/NeRF/train_front.png" alt="Front three-quarter capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
         </div>
         <figcaption class="px-4 py-3">
           <div class="flex items-center justify-between mb-1">
@@ -353,7 +337,7 @@
         <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
         <span class="corner corner-bl"></span><span class="corner corner-br"></span>
         <div class="frame-media">
-          <img src="./train_side.png" alt="Lateral profile capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
+          <img src=".experiments/NeRF/train_side.png" alt="Lateral profile capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
         </div>
         <figcaption class="px-4 py-3">
           <div class="flex items-center justify-between mb-1">
@@ -368,7 +352,7 @@
         <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
         <span class="corner corner-bl"></span><span class="corner corner-br"></span>
         <div class="frame-media">
-          <img src="./train_back.png" alt="Rear coupling-side capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
+          <img src=".experiments/NeRF/train_back.png" alt="Rear coupling-side capture of the Western Pacific 713 locomotive used for 3D reconstruction.">
         </div>
         <figcaption class="px-4 py-3">
           <div class="flex items-center justify-between mb-1">
@@ -381,7 +365,6 @@
 
     </div>
 
-    <!-- metadata + pipeline note -->
     <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8">
       <div class="lg:col-span-5">
         <p class="label text-[11px] text-slate mb-3">Dataset_Metadata</p>
@@ -405,7 +388,6 @@
 
   </section>
 
-  <!-- ============ ABOUT / FOOTER ============ -->
   <section id="about" class="max-w-[1280px] mx-auto px-5 md:px-10 py-16">
     <div class="reveal grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -428,10 +410,10 @@
       <div class="lg:col-span-3">
         <p class="label text-[11px] text-slate mb-3">Reach</p>
         <div class="flex flex-col gap-2 text-[12.5px]">
-          <a href="#" class="border border-ink px-3 py-2 flex items-center justify-between hover:bg-ink hover:text-paper transition-colors">
+          <a href="https://github.com/Saad-Dogar" class="border border-ink px-3 py-2 flex items-center justify-between hover:bg-ink hover:text-paper transition-colors">
             GitHub <span aria-hidden="true">↗</span>
           </a>
-          <a href="#" class="border border-ink px-3 py-2 flex items-center justify-between hover:bg-ink hover:text-paper transition-colors">
+          <a href="https://www.linkedin.com/in/muhammad-saad-saleem-274323322/" class="border border-ink px-3 py-2 flex items-center justify-between hover:bg-ink hover:text-paper transition-colors">
             LinkedIn <span aria-hidden="true">↗</span>
           </a>
         </div>
@@ -448,7 +430,6 @@
   </footer>
 
 <script>
-  // uptime clock
   (function(){
     const el = document.getElementById('uptime');
     if(!el) return;
@@ -464,7 +445,6 @@
     setInterval(tick, 1000);
   })();
 
-  // coordinate readout
   (function(){
     const el = document.getElementById('coord-readout');
     if(!el) return;
@@ -475,7 +455,6 @@
     }, { passive: true });
   })();
 
-  // scroll reveal
   (function(){
     const items = document.querySelectorAll('.reveal');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
